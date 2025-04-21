@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bank System Web Demo</title>
+    <style>
+        #terminal {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .input-group { margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Bank Record System</h1>
+    <div id="terminal"></div>
+    
+    <div class="input-group">
+        <select id="commandSelect">
+            <option value="add">Add Record</option>
+            <option value="printall">Print All</option>
+            <option value="find">Find Record</option>
+            <option value="delete">Delete Record</option>
+        </select>
+    </div>
+
+    <div id="inputFields" style="display: none;">
+        <input type="number" id="accountNo" placeholder="Account Number">
+        <input type="text" id="name" placeholder="Name">
+        <input type="text" id="address" placeholder="Address">
+        <button onclick="executeCommand()">Submit</button>
+    </div>
+
+    <script src="bank.js"></script>
+    <script>
+        let Module = null;
+        let currentCommand = '';
+
+        const initApp = async () => {
+            Module = await createModule();
+            Module.ccall('init_database', null, [], []);
+            updateTerminal("Bank System Ready!\nType 'help' for commands");
+        };
+
+        const updateTerminal = (text) => {
+            const terminal = document.getElementById('terminal');
+            terminal.textContent += '\n' + text;
+            terminal.scrollTop = terminal.scrollHeight;
+        };
+
+        const executeCommand = () => {
+            const command = buildCommand();
+            Module.ccall('process_command', null, ['string'], [command]);
+            const output = Module.ccall('get_output', 'string', [], []);
+            updateTerminal("> " + command + "\n" + output);
+        };
+
+        const buildCommand = () => {
+            const cmd = document.getElementById('commandSelect').value;
+            switch(cmd) {
+                case 'add':
+                    return `add|${document.getElementById('accountNo').value}|` +
+                           `${document.getElementById('name').value}|` +
+                           `${document.getElementById('address').value}`;
+                case 'find':
+                case 'delete':
+                    return `${cmd}|${document.getElementById('accountNo').value}`;
+                default:
+                    return cmd;
+            }
+        };
+
+        // UI Event Handlers
+        document.getElementById('commandSelect').addEventListener('change', (e) => {
+            const showFields = ['add', 'find', 'delete'].includes(e.target.value);
+            document.getElementById('inputFields').style.display = 
+                showFields ? 'block' : 'none';
+            
+            if(e.target.value === 'printall') executeCommand();
+        });
+
+        initApp();
+    </script>
+</body>
+</html>
