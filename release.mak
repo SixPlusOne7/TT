@@ -8,3 +8,5 @@ user_interface.o: user_interface.cpp record.h llist.h
 llist.o: llist.cpp record.h
 	g++ -ansi -pedantic-errors -Wall -c llist.cpp
 
+web: $(SOURCES)
+	em++ llist.cpp user_interface.cpp -o bank.js $(EMFLAGS)
